@@ -45,4 +45,5 @@ RESOURCES += \
 
 DISTFILES += \
     .gitignore \
-    LICENSE
+    LICENSE \
+    README.md
