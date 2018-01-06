@@ -28,7 +28,7 @@ class DisplayWidget : public QWidget
     enum Fading { FadedOut, FadingIn, FadedIn, FadingOut };
 
 public:
-    explicit DisplayWidget(QWidget *parent = nullptr);
+    explicit DisplayWidget(QWidget *parent = nullptr, bool widgetMode = false);
     void startCountdown(int msecDuration);
     void displayFile(const QString &filename);
     void stop();
@@ -52,6 +52,7 @@ private:
 
 private:
     Displaying displayMode;
+    bool widgetMode;
 
     QTimer timer;
     qint64 msecLeft;

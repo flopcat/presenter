@@ -22,11 +22,13 @@
 
 constexpr qint64 updateMsec = 1000/20;
 
-DisplayWidget::DisplayWidget(QWidget *parent) : QWidget(parent)
+DisplayWidget::DisplayWidget(QWidget *parent, bool widgetMode) : QWidget(parent), widgetMode(widgetMode)
 {
     displayMode = DisplayingNothing;
     fadeMode = FadedOut;
-    setWindowFlags(Qt::FramelessWindowHint | Qt::CustomizeWindowHint | Qt::WindowStaysOnTopHint);
+    if (!widgetMode)
+        setWindowFlags(Qt::FramelessWindowHint | Qt::CustomizeWindowHint | Qt::WindowStaysOnTopHint);
+
     timer.setInterval(updateMsec);
     timer.setSingleShot(false);
     fadeTimer.setInterval(updateMsec);
@@ -47,19 +49,21 @@ void DisplayWidget::startCountdown(int msecDuration)
     timer.start();
 
     startFader(FadingIn);
-    show();
+    if (!widgetMode)
+        show();
 }
 
 void DisplayWidget::displayFile(const QString &filename)
 {
     bool success = image.load(filename);
-    if (!success)
+    if (!success && !widgetMode)
         return;
 
-    displayMode = DisplayingImage;
+    displayMode = success ? DisplayingImage : DisplayingNothing;
     startFader(FadingIn);
     update();
-    show();
+    if (!widgetMode)
+        show();
 }
 
 void DisplayWidget::stop()
@@ -86,6 +90,9 @@ void DisplayWidget::timer_timeout()
 
 void DisplayWidget::fadeTimer_timeout()
 {
+    if (widgetMode)
+        return;
+
     if (fadeMode == FadedIn || fadeMode == FadedOut)
         return;
 
@@ -197,6 +204,9 @@ void DisplayWidget::paintImage()
 
 void DisplayWidget::startFader(Fading effect)
 {
+    if (widgetMode)
+        return;
+
     Fading priorMode = fadeMode;
 
     if (priorMode == FadedOut && effect == FadingIn)
