@@ -205,6 +205,9 @@ void DisplayWidget::startFader(Fading effect)
         return;
 
     Fading priorMode = fadeMode;
+    if ((priorMode == FadedIn && effect == FadingIn) ||
+        (priorMode == FadedOut && effect == FadingOut))
+        return;
 
     if (priorMode == FadedOut && effect == FadingIn)
         setWindowOpacity(0.0);
