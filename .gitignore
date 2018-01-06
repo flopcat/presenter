@@ -28,6 +28,7 @@ Makefile*
 *-build-*
 presenter
 *.exe
+/releases/
 
 # QtCreator
 
@@ -46,4 +47,3 @@ presenter
 /object_script.*.Debug
 /object_script.*.Release
 /resources/translations/
-
