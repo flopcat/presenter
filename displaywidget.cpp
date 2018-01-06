@@ -56,9 +56,6 @@ void DisplayWidget::startCountdown(int msecDuration)
 void DisplayWidget::displayFile(const QString &filename)
 {
     bool success = image.load(filename);
-    if (!success && !widgetMode)
-        return;
-
     displayMode = success ? DisplayingImage : DisplayingNothing;
     startFader(FadingIn);
     update();
