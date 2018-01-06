@@ -31,6 +31,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+    setupPreview();
     setupTrayIcon();
     setupScreens();
     restoreSettings();
@@ -151,6 +152,12 @@ void MainWindow::closeEvent(QCloseEvent *event)
         QMessageBox::information(this, "Tray icon in use - Presenter", text);
     }
     event->accept();
+}
+
+void MainWindow::setupPreview()
+{
+    imagesPreview = new DisplayWidget(nullptr, true);
+    ui->imagesPreviewFrame->layout()->addWidget(imagesPreview);
 }
 
 
@@ -305,9 +312,7 @@ void MainWindow::on_imagesList_itemDoubleClicked(QListWidgetItem *item)
 
 void MainWindow::on_imagesList_currentTextChanged(const QString &currentText)
 {
-    QGraphicsScene scene;
-    scene.addPixmap(QPixmap(currentText));
-    ui->imagesPreview->setScene(&scene);
+    imagesPreview->displayFile(currentText);
 }
 
 void MainWindow::on_monitorCombo_currentIndexChanged(int index)

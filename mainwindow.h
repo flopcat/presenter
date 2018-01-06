@@ -47,6 +47,7 @@ protected:
     void closeEvent(QCloseEvent *event);
 
 private:
+    void setupPreview();
     void setupTrayIcon();
     void setupScreens();
     void useDisplayGeometry();
@@ -96,6 +97,7 @@ private:
     QSystemTrayIcon icon;
     QSettings settings;
     DisplayWidget displayWidget;
+    DisplayWidget *imagesPreview;
 
     QList<QRect> screenAreas;
     QList<QSharedPointer<Countdown>> countdowns;
