@@ -65,8 +65,7 @@ void DisplayWidget::displayFile(const QString &filename)
 
 void DisplayWidget::stop()
 {
-    if (displayMode != DisplayingNothing)
-        startFader(FadingOut);
+    startFader(FadingOut);
 }
 
 void DisplayWidget::timer_timeout()
@@ -130,6 +129,20 @@ void DisplayWidget::paintEvent(QPaintEvent *e)
         paintImage();
         break;
     }
+}
+
+void DisplayWidget::mousePressEvent(QMouseEvent *event)
+{
+    if (event->button() == Qt::LeftButton && !widgetMode)
+        stop();
+    QWidget::mousePressEvent(event);
+}
+
+void DisplayWidget::keyPressEvent(QKeyEvent *event)
+{
+    if (event->key() == Qt::Key_Escape && !widgetMode)
+        stop();
+    QWidget::keyPressEvent(event);
 }
 
 void DisplayWidget::paintNothing()

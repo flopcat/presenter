@@ -43,6 +43,8 @@ private slots:
 
 protected:
     void paintEvent(QPaintEvent *e);
+    void mousePressEvent(QMouseEvent *event);
+    void keyPressEvent(QKeyEvent *event);
 
 private:
     void paintNothing();
