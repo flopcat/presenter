@@ -17,8 +17,10 @@
 
 #include <QApplication>
 #include <QDesktopWidget>
+#include <QDragMoveEvent>
 #include <QFileDialog>
 #include <QMenu>
+#include <QMimeData>
 #include <QMessageBox>
 #include <QPaintEvent>
 #include <QTimer>
@@ -31,6 +33,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+    setAcceptDrops(true);
     setupPreview();
     setupTrayIcon();
     setupScreens();
@@ -152,6 +155,35 @@ void MainWindow::closeEvent(QCloseEvent *event)
         QMessageBox::information(this, "Tray icon in use - Presenter", text);
     }
     event->accept();
+}
+
+void MainWindow::dragMoveEvent(QDragMoveEvent *event)
+{
+    if (event->mimeData()->hasUrls() && event->answerRect().intersects(ui->imagesList->geometry())) {
+        event->acceptProposedAction();
+        return;
+    }
+    QMainWindow::dragMoveEvent(event);
+}
+
+void MainWindow::dragEnterEvent(QDragEnterEvent *event)
+{
+    if (event->mimeData()->hasUrls() && event->answerRect().intersects(ui->imagesList->geometry())) {
+        event->acceptProposedAction();
+        return;
+    }
+    QMainWindow::dragEnterEvent(event);
+}
+
+void MainWindow::dropEvent(QDropEvent *event)
+{
+    if (event->mimeData()->hasUrls()) {
+        for (const QUrl &u : event->mimeData()->urls()) {
+            if (u.isLocalFile()) {
+                appendImages({u.toLocalFile()});
+            }
+        }
+    }
 }
 
 void MainWindow::setupPreview()
