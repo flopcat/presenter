@@ -41,11 +41,16 @@ DisplayWidget::DisplayWidget(QWidget *parent, bool widgetMode) : QWidget(parent)
 
 void DisplayWidget::startCountdown(int msecDuration)
 {
+    startCountdownPartway(0, msecDuration);
+}
+
+void DisplayWidget::startCountdownPartway(int msecPosition, int msecDuration)
+{
     displayMode = DisplayingCountdown;
     QDateTime nowTime = QDateTime::currentDateTime();
-    endTime = nowTime.addMSecs(msecDuration);
+    endTime = nowTime.addMSecs(msecDuration - msecPosition);
     this->msecDuration = msecDuration;
-    msecLeft = msecDuration - 1;
+    msecLeft = msecDuration - msecPosition;
     timer.start();
 
     startFader(FadingIn);
@@ -175,7 +180,7 @@ void DisplayWidget::paintCountdown()
     f.setPixelSize(d * 0.2);
     p.setFont(f);
 
-    int time = std::max((msecLeft + (updateMsec/2)) / 1000, 0ll);
+    int time = std::min(std::max((msecLeft + (updateMsec/2)) / 1000, 0ll), 3599ll);
     QString text = QTime(0, time/60, time%60).toString("m:ss");
     QFontMetrics metrics(f);
     QSize sz = metrics.size(Qt::TextSingleLine, text);
@@ -187,7 +192,7 @@ void DisplayWidget::paintCountdown()
     QPointF pieCenter(d*0.2, h*0.5);
     double radius = d * 0.2;
     double radius2 = radius * 0.6;
-    double factor = std::max(msecLeft/(double)msecDuration, 0.0);
+    double factor = std::min(std::max(msecLeft/(double)msecDuration, 0.0), 1.0);
     QRectF pieRect(pieCenter - QPoint(radius,radius),
                    pieCenter + QPoint(radius,radius));
     p.setPen(Qt::NoPen);

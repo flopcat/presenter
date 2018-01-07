@@ -30,6 +30,7 @@ class DisplayWidget : public QWidget
 public:
     explicit DisplayWidget(QWidget *parent = nullptr, bool widgetMode = false);
     void startCountdown(int msecDuration);
+    void startCountdownPartway(int msecPosition, int msecDuration);
     void displayFile(const QString &filename);
     void stop();
 
