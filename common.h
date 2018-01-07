@@ -35,6 +35,7 @@ public:
     ~Countdown();
 
     QString toString() const;
+    qint64 remainingTimeInMsec();
     void updateTimer();
 
     int dayOfWeek = 1;

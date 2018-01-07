@@ -45,23 +45,28 @@ QString Countdown::toString() const {
                                       duration.toString());
 }
 
+qint64 Countdown::remainingTimeInMsec()
+{
+    QDateTime now(QDateTime::currentDateTime());
+    qint64 nowMsec = (now.date().dayOfWeek()-1)*86400000;
+    nowMsec += (now.time().msecsSinceStartOfDay());
+
+    qint64 futureMsec = (dayOfWeek-1)*86400000;
+    futureMsec += endTime.msecsSinceStartOfDay();
+    futureMsec -= duration.msecsSinceStartOfDay();
+
+    qint64 offset = futureMsec - nowMsec;
+    if (offset < 10) // futuretime is past the end of week from nowtime
+        offset += 60*60*24*7*1000;
+    return offset;
+}
+
 void Countdown::updateTimer() {
     if (timer.isNull()) {
         qDebug() << "creating timer object in update timer";
         timer.reset(new QTimer());
     }
-    QDateTime now(QDateTime::currentDateTime());
-    int nowsec = (now.date().dayOfWeek()-1)*86400;
-    nowsec += (now.time().msecsSinceStartOfDay()/1000);
-
-    int futuresec = (dayOfWeek-1)*86400;
-    futuresec += endTime.msecsSinceStartOfDay()/1000;
-    futuresec -= duration.msecsSinceStartOfDay()/1000;
-
-    int offset = futuresec - nowsec;
-    if (offset < 10) // futuretime is past the end of week from nowtime
-        offset += 60*60*24*7;
-    timer->setInterval(offset*1000);
+    timer->setInterval(remainingTimeInMsec());
 }
 
 static const char settingDayOfWeek[] = "dayOfWeek";
