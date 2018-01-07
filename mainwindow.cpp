@@ -242,6 +242,12 @@ void MainWindow::startCountdown(int msecDuration)
     displayWidget.startCountdown(msecDuration);
 }
 
+void MainWindow::startCountdownPartway(int msecsPosition, int msecsDuration)
+{
+    useDisplayGeometry();
+    displayWidget.startCountdownPartway(msecsPosition, msecsDuration);
+}
+
 void MainWindow::startImage(const QString &filename)
 {
     useDisplayGeometry();
@@ -287,6 +293,22 @@ void MainWindow::on_countdownTest_clicked()
     startCountdown(10000);
 }
 
+
+void MainWindow::on_countdownStart_clicked()
+{
+    int i = ui->countdownList->currentRow();
+    if (i < 0)
+        return;
+    int position = countdowns[i]->remainingTimeInMsec();
+    int duration = countdowns[i]->duration.msecsSinceStartOfDay();
+    startCountdownPartway(duration - position, duration);
+}
+
+void MainWindow::on_countdownStop_clicked()
+{
+    displayWidget.stop();
+}
+
 void MainWindow::on_countdownList_itemDoubleClicked(QListWidgetItem *item)
 {
     Q_UNUSED(item);
@@ -299,11 +321,6 @@ void MainWindow::on_countdownList_itemDoubleClicked(QListWidgetItem *item)
         return;
     d.updateCountdown();
     item->setText(countdowns[i]->toString());
-}
-
-void MainWindow::on_countdownStop_clicked()
-{
-    displayWidget.stop();
 }
 
 void MainWindow::on_imagesAdd_clicked()

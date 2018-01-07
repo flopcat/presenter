@@ -58,6 +58,7 @@ private:
     void appendCountdown(QSharedPointer<Countdown> c);
     void appendImages(const QStringList &images);
     void startCountdown(int msecDuration);
+    void startCountdownPartway(int msecsPosition, int msecsDuration);
     void startImage(const QString &filename);
 
 private slots:
@@ -69,9 +70,11 @@ private slots:
 
     void on_countdownTest_clicked();
 
-    void on_countdownList_itemDoubleClicked(QListWidgetItem *item);
+    void on_countdownStart_clicked();
 
     void on_countdownStop_clicked();
+
+    void on_countdownList_itemDoubleClicked(QListWidgetItem *item);
 
     void on_imagesAdd_clicked();
 
