@@ -34,7 +34,7 @@
        <item>
         <widget class="QPushButton" name="monitorRefresh">
          <property name="text">
-          <string>Refrresh</string>
+          <string>Refresh</string>
          </property>
         </widget>
        </item>
