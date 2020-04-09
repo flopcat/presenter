@@ -218,6 +218,7 @@ void DisplayWidget::paintImage()
     QPainter p(this);
     p.setBackground(bgColor);
     p.eraseRect(rect());
+    p.setRenderHint(QPainter::SmoothPixmapTransform);
     p.drawImage(picRect, image);
 }
 
