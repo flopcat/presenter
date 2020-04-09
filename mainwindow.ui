@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>518</width>
+    <width>552</width>
     <height>581</height>
    </rect>
   </property>
@@ -199,6 +199,13 @@
         </widget>
        </item>
        <item>
+        <widget class="QCheckBox" name="programSystemTray">
+         <property name="text">
+          <string>Use the system tray</string>
+         </property>
+        </widget>
+       </item>
+       <item>
         <widget class="QCheckBox" name="programWarnOnClose">
          <property name="text">
           <string>Warn on close to tray</string>
@@ -218,8 +225,8 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>518</width>
-     <height>21</height>
+     <width>552</width>
+     <height>23</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu_Help">

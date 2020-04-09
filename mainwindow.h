@@ -36,6 +36,7 @@ public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
     bool startMinimized();
+    bool startVisible();
 
     void restoreSettings();
     void saveSettings();
@@ -97,6 +98,8 @@ private slots:
     void on_actionHelpAboutQt_triggered();
 
     void on_actionHelpExit_triggered();
+
+    void on_programSystemTray_clicked();
 
 private:
     Ui::MainWindow *ui;

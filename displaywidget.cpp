@@ -14,12 +14,14 @@
  * with Presenter; if not, write to the Free Software Foundation, Inc.,
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
+#include <QCoreApplication>
 #include <QPainter>
 #include <QPaintEvent>
 #include <QStyle>
 #include <QTime>
 #include "displaywidget.h"
 
+constexpr qint64 fadeTimeMsec = 300;
 constexpr qint64 updateMsec = 1000/20;
 
 DisplayWidget::DisplayWidget(QWidget *parent, bool widgetMode) : QWidget(parent), widgetMode(widgetMode)
@@ -33,7 +35,7 @@ DisplayWidget::DisplayWidget(QWidget *parent, bool widgetMode) : QWidget(parent)
     timer.setSingleShot(false);
     fadeTimer.setInterval(updateMsec);
     fadeTimer.setSingleShot(false);
-    connect(&timer, QTimer::timeout,
+    connect(&timer, &QTimer::timeout,
             this, &DisplayWidget::timer_timeout);
     connect(&fadeTimer, &QTimer::timeout,
             this, &DisplayWidget::fadeTimer_timeout);
@@ -99,13 +101,15 @@ void DisplayWidget::fadeTimer_timeout()
 
     QDateTime nowTime = QDateTime::currentDateTime();
     qint64 msecs = fadeStart.msecsTo(nowTime);
-    qreal factor = msecs/1000.0;
+    qreal factor = msecs/double(fadeTimeMsec);
     factor = std::min(1.0, std::max(factor, 0.0));
     if (fadeFactor > factor)
         factor = fadeFactor;
     else
         fadeFactor = factor;
+
     setWindowOpacity(fadeMode == FadingIn ? factor : 1.0 - factor);
+    update();
 
     if (fadeFactor >= 1.0) {
         if (fadeMode == FadingOut) {

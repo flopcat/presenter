@@ -23,6 +23,7 @@
 #include <QMimeData>
 #include <QMessageBox>
 #include <QPaintEvent>
+#include <QScreen>
 #include <QTimer>
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
@@ -51,8 +52,14 @@ bool MainWindow::startMinimized()
     return ui->programStartMinimized->isChecked();
 }
 
+bool MainWindow::startVisible()
+{
+    return !ui->programSystemTray->isChecked();
+}
+
 static const char settingDisplayGeometry[] = "displayGeometry";
 static const char settingStartMinimized[] = "startMinimized";
+static const char settingSystemTray[] = "systemTray";
 static const char settingWarnOnClose[] = "warnOnClose";
 static const char settingCountdowns[] = "Countdowns";
 static const char settingImages[] = "Images";
@@ -69,6 +76,7 @@ void MainWindow::restoreSettings()
     if (index >= 0)
         ui->monitorCombo->setCurrentIndex(index);
 
+    ui->programSystemTray->setChecked(settings.value(settingSystemTray, false).toBool());
     ui->programStartMinimized->setChecked(settings.value(settingStartMinimized, false).toBool());
     ui->programWarnOnClose->setChecked(settings.value(settingWarnOnClose, true).toBool());
 
@@ -98,6 +106,9 @@ void MainWindow::restoreSettings()
     }
     settings.endArray();
     appendImages(files);
+
+    // update things
+    on_programSystemTray_clicked();
 }
 
 void MainWindow::saveSettings()
@@ -106,6 +117,7 @@ void MainWindow::saveSettings()
 
     settings.setValue(settingDisplayGeometry, usedDisplayGeometry);
     settings.setValue(settingStartMinimized, ui->programStartMinimized->isChecked());
+    settings.setValue(settingSystemTray, ui->programSystemTray->isChecked());
     settings.setValue(settingWarnOnClose, ui->programWarnOnClose->isChecked());
 
     size = countdowns.size();
@@ -129,11 +141,11 @@ void MainWindow::populateScreens()
 {
     ui->monitorCombo->clear();
     screenAreas.clear();
-    QDesktopWidget *desktop = QApplication::desktop();
-    for (int i = 0; i < desktop->screenCount(); i++) {
-        QWidget *w = desktop->screen(i);
+    auto screens = QGuiApplication::screens();
+    for (int i = 0; i < screens.count(); i++) {
+        QScreen *scr = screens[i];
         QString s("%1: %2x%3+%4+%5");
-        QRect g = w->geometry();
+        QRect g = scr->geometry();
         screenAreas.append(g);
         s = s.arg(QString::number(i),
                   QString::number(g.width()), QString::number(g.height()),
@@ -147,7 +159,8 @@ void MainWindow::populateScreens()
 void MainWindow::closeEvent(QCloseEvent *event)
 {
     saveSettings();
-    if (ui->programWarnOnClose->isChecked()) {
+    if (ui->programSystemTray->isChecked()
+        && ui->programWarnOnClose->isChecked()) {
         QString text("<h3>Deferred action</h3>"
                      "This application has an icon in the system tray."
                      "<p>The application will run in the background until "
@@ -155,6 +168,9 @@ void MainWindow::closeEvent(QCloseEvent *event)
         QMessageBox::information(this, "Tray icon in use - Presenter", text);
     }
     event->accept();
+
+    if (!ui->programSystemTray->isChecked())
+        qApp->quit();
 }
 
 void MainWindow::dragMoveEvent(QDragMoveEvent *event)
@@ -202,19 +218,27 @@ void MainWindow::setupTrayIcon()
     connect(m->addAction(tr("&Quit")),
             &QAction::triggered,
             qApp, &QCoreApplication::quit);
-    icon.setIcon(QIcon(":/images/icon.svg"));
+    icon.setIcon(QPixmap(":/images/icon.svg"));
     icon.setContextMenu(m);
-    icon.show();
 }
 
 void MainWindow::setupScreens()
 {
     populateScreens();
-    QDesktopWidget *desktop = QApplication::desktop();
-    connect(desktop, &QDesktopWidget::resized,
+    connect(qApp, &QGuiApplication::screenAdded,
             this, &MainWindow::populateScreens);
-    connect(desktop, &QDesktopWidget::screenCountChanged,
+    connect(qApp, &QGuiApplication::screenRemoved,
             this, &MainWindow::populateScreens);
+
+    for (auto screen : QGuiApplication::screens()) {
+        connect(screen, &QScreen::geometryChanged,
+                this, &MainWindow::populateScreens);
+    }
+    connect(qApp, &QGuiApplication::screenAdded,
+            this, [=](QScreen *screen) {
+        connect(screen, &QScreen::geometryChanged,
+                this, &MainWindow::populateScreens);
+    });
 }
 
 void MainWindow::useDisplayGeometry()
@@ -408,4 +432,9 @@ void MainWindow::on_actionHelpAboutQt_triggered()
 void MainWindow::on_actionHelpExit_triggered()
 {
     qApp->quit();
+}
+
+void MainWindow::on_programSystemTray_clicked()
+{
+    icon.setVisible(ui->programSystemTray->isChecked());
 }
