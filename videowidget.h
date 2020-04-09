@@ -5,6 +5,8 @@
 #include <mpv/client.h>
 #include <mpv/render_gl.h>
 
+class QMouseEvent;
+
 class VideoWidget : public QOpenGLWidget
 {
     Q_OBJECT
@@ -28,6 +30,7 @@ public slots:
 protected:
     void initializeGL() Q_DECL_OVERRIDE;
     void paintGL() Q_DECL_OVERRIDE;
+    void mousePressEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
 
 private slots:
     void handleMpvEvents();

@@ -1,5 +1,7 @@
 #include <cstring>
+#include <QMouseEvent>
 #include <QOpenGLContext>
+#include <QTimer>
 #include "videowidget.h"
 
 static const char cmdLoadFile[] = "loadfile";
@@ -39,6 +41,8 @@ static void *getGlProcAddress(void *ctx, const char *name)
 
 VideoWidget::VideoWidget(QWidget *parent) : QOpenGLWidget(parent)
 {
+    setCursor(Qt::PointingHandCursor);
+
     mpv = mpv_create();
     if (!mpv)
         throw std::runtime_error(msgMpvCreateException);
@@ -128,6 +132,12 @@ void VideoWidget::paintGL()
     };
 
     mpv_render_context_render(mpvGL, renderParams);
+}
+
+void VideoWidget::mousePressEvent(QMouseEvent *event)
+{
+    if (event->button() == Qt::LeftButton)
+        pauseResume();
 }
 
 void VideoWidget::handleMpvEvents()
