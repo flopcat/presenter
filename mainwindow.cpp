@@ -349,7 +349,7 @@ void MainWindow::on_countdownList_itemDoubleClicked(QListWidgetItem *item)
 
 void MainWindow::on_imagesAdd_clicked()
 {
-    QStringList files = QFileDialog::getOpenFileNames(this, QString(), QString(), "Images (*.png;*.jpg;*.jpeg;*.svg");
+    QStringList files = QFileDialog::getOpenFileNames(this, QString(), QString(), "Images (*.png *.jpg *.jpeg *.svg);;All files (*.*)");
     appendImages(files);
 }
 
