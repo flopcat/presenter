@@ -90,8 +90,7 @@ void DisplayWidget::displayFile(const QString &filename)
     } else {
         bool success = image.load(filename);
         displayMode = success ? DisplayingImage : DisplayingNothing;
-        if (videoWidget->isVisible())
-            videoWidget->hide();
+        videoWidget->hide();
     }
     startFader(FadingIn);
     update();
