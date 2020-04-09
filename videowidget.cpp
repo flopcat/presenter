@@ -2,13 +2,25 @@
 #include <QOpenGLContext>
 #include "videowidget.h"
 
+static const char cmdLoadFile[] = "loadfile";
+static const char cmdStop[] = "stop";
 static const char msgMpvCreateException[] = "could not create mpv context";
 static const char msgMpvInitializeException[] = "could not initialize mpv context";
 static const char msgRenderContextException[] = "failed to initialize mpv GL context";
+static const char propDScale[] = "dscale";
 static const char propDuration[] = "duration";
-static const char propTimePos[] = "time-pos";
+static const char propEofReached[] = "eof-reached";
 static const char propHwdec[] = "hwdec";
+static const char propKeepOpen[] = "keep-open";
+static const char propPause[] = "pause";
+static const char propTimePos[] = "time-pos";
+static const char propVolume[] = "volume";
+static const char value0[] = "0";
+static const char value100[] = "100";
 static const char valueAuto[] = "auto";
+static const char valueNo[] = "no";
+static const char valueYes[] = "yes";
+static const char valueSpline36[] = "spline36";
 
 static void mpvWakeUp(void *ctx)
 {
@@ -32,16 +44,56 @@ VideoWidget::VideoWidget(QWidget *parent) : QOpenGLWidget(parent)
         throw std::runtime_error(msgMpvCreateException);
     if (mpv_initialize(mpv) < 0)
         throw std::runtime_error(msgMpvInitializeException);
-
+    mpv_set_option_string(mpv, "vo", "libmpv");
     mpv_set_option_string(mpv, propHwdec, valueAuto);
+    mpv_set_option_string(mpv, propKeepOpen, valueYes);
+    mpv_set_option_string(mpv, propDScale, valueSpline36);
     mpv_observe_property(mpv, 0, propDuration, MPV_FORMAT_DOUBLE);
+    mpv_observe_property(mpv, 0, propEofReached, MPV_FORMAT_FLAG);
+    mpv_observe_property(mpv, 0, propPause, MPV_FORMAT_FLAG);
     mpv_observe_property(mpv, 0, propTimePos, MPV_FORMAT_DOUBLE);
     mpv_set_wakeup_callback(mpv, mpvWakeUp, this);
 }
 
 VideoWidget::~VideoWidget()
 {
-    mpv_destroy(mpv);
+    makeCurrent();
+    if (mpvGL) {
+        mpv_render_context_free(mpvGL);
+        mpvGL = nullptr;
+    }
+    if (mpv) {
+        mpv_terminate_destroy(mpv);
+        mpv = nullptr;
+    } else {
+        abort();
+    }
+}
+
+void VideoWidget::setSilentMode(bool silent)
+{
+    mpvSetProperty(propVolume, silent ? value0 : value100);
+}
+
+void VideoWidget::setEarlyStopMode(bool earlyStop)
+{
+    earlyStopMode = earlyStop;
+}
+
+void VideoWidget::play(QString url)
+{
+    mpvCommand({cmdLoadFile, url});
+    mpvSetProperty(propPause, valueNo);
+}
+
+void VideoWidget::stop()
+{
+    mpvCommand({cmdStop});
+}
+
+void VideoWidget::pauseResume()
+{
+    mpvSetProperty(propPause, !mpvPaused ? valueYes : valueNo);
 }
 
 void VideoWidget::initializeGL()
@@ -98,11 +150,25 @@ void VideoWidget::handleMpvEvent(mpv_event *event)
             if (prop->format == MPV_FORMAT_DOUBLE) {
                 double time = *(double*)prop->data;
                 emit positionChanged(time);
+                if (earlyStopMode && time > 5.0) {
+                    mpvSetProperty(propPause, valueYes);
+                }
             }
         } else if (!strcmp(prop->name, propDuration)) {
             if (prop->format == MPV_FORMAT_DOUBLE) {
                 double time = *(double*)prop->data;
                 emit durationChanged(time);
+            }
+        } else if (!strcmp(prop->name, propEofReached)) {
+            if (prop->format == MPV_FORMAT_FLAG) {
+                bool flag = *(bool*)prop->data;
+                if (flag)
+                    emit eofReached();
+            }
+        } else if (!strcmp(prop->name, propPause)) {
+            if (prop->format == MPV_FORMAT_FLAG) {
+                bool flag = *(bool*)prop->data;
+                mpvPaused = flag;
             }
         }
         break;
@@ -122,6 +188,26 @@ void VideoWidget::maybeUpdate()
     } else {
         update();
     }
+}
+
+void VideoWidget::mpvCommand(const QStringList &params)
+{
+    int n = params.count();
+    char *args[n+1];
+    QList<QByteArray> data;
+    for (int i = 0; i < n; i++) {
+        data.append(params[i].toUtf8());
+        args[i] = data[i].data();
+    }
+    args[n] = nullptr;
+    mpv_command(mpv, (const char**)args);
+}
+
+void VideoWidget::mpvSetProperty(const QString &name, const QString &value)
+{
+    QByteArray cName = name.toUtf8();
+    QByteArray cValue = value.toUtf8();
+    mpv_set_property_string(mpv, cName.data(), cValue.data());
 }
 
 void VideoWidget::onMpvGLUpdate(void *ctx)

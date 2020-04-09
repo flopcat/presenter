@@ -21,22 +21,25 @@
 #include <QTimer>
 #include <QWidget>
 
+class VideoWidget;
+
 class DisplayWidget : public QWidget
 {
     Q_OBJECT
-    enum Displaying { DisplayingNothing, DisplayingCountdown, DisplayingImage };
+    enum Displaying { DisplayingNothing, DisplayingCountdown, DisplayingImage, DisplayingMedia };
     enum Fading { FadedOut, FadingIn, FadedIn, FadingOut };
 
 public:
     explicit DisplayWidget(QWidget *parent = nullptr, bool widgetMode = false);
+    ~DisplayWidget();
     void startCountdown(int msecDuration);
     void startCountdownPartway(int msecPosition, int msecDuration);
     void displayFile(const QString &filename);
-    void stop();
 
 signals:
 
 public slots:
+    void stop();
 
 private slots:
     void timer_timeout();
@@ -54,6 +57,7 @@ private:
     void startFader(Fading effect);
 
 private:
+    VideoWidget *videoWidget;
     Displaying displayMode;
     bool widgetMode;
 

@@ -15,11 +15,14 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 #include <QCoreApplication>
+#include <QFileInfo>
+#include <QHBoxLayout>
 #include <QPainter>
 #include <QPaintEvent>
 #include <QStyle>
 #include <QTime>
 #include "displaywidget.h"
+#include "videowidget.h"
 
 constexpr qint64 fadeTimeMsec = 300;
 constexpr qint64 updateMsec = 1000/20;
@@ -39,6 +42,22 @@ DisplayWidget::DisplayWidget(QWidget *parent, bool widgetMode) : QWidget(parent)
             this, &DisplayWidget::timer_timeout);
     connect(&fadeTimer, &QTimer::timeout,
             this, &DisplayWidget::fadeTimer_timeout);
+
+    videoWidget = new VideoWidget;
+    videoWidget->setSilentMode(widgetMode);
+    videoWidget->setEarlyStopMode(widgetMode);
+    connect(videoWidget, &VideoWidget::eofReached,
+            this, &DisplayWidget::stop);
+
+    auto *layout = new QHBoxLayout;
+    layout->setMargin(0);
+    layout->addWidget(videoWidget);
+    setLayout(layout);
+}
+
+DisplayWidget::~DisplayWidget()
+{
+    delete videoWidget;
 }
 
 void DisplayWidget::startCountdown(int msecDuration)
@@ -62,8 +81,18 @@ void DisplayWidget::startCountdownPartway(int msecPosition, int msecDuration)
 
 void DisplayWidget::displayFile(const QString &filename)
 {
-    bool success = image.load(filename);
-    displayMode = success ? DisplayingImage : DisplayingNothing;
+    QStringList videoExtensions { "mp4", "mkv", "avi", "m4v" };
+    QString ext = QFileInfo(filename).suffix();
+    if (videoExtensions.contains(ext)) {
+        videoWidget->show();
+        videoWidget->play(filename);
+        displayMode = DisplayingMedia;
+    } else {
+        bool success = image.load(filename);
+        displayMode = success ? DisplayingImage : DisplayingNothing;
+        if (videoWidget->isVisible())
+            videoWidget->hide();
+    }
     startFader(FadingIn);
     update();
     if (!widgetMode)
@@ -113,6 +142,10 @@ void DisplayWidget::fadeTimer_timeout()
 
     if (fadeFactor >= 1.0) {
         if (fadeMode == FadingOut) {
+            if (displayMode == DisplayingMedia) {
+                videoWidget->stop();
+                videoWidget->hide();
+            }
             displayMode = DisplayingNothing;
             fadeMode = FadedOut;
             timer.stop();
@@ -137,6 +170,8 @@ void DisplayWidget::paintEvent(QPaintEvent *e)
     case DisplayingImage:
         paintImage();
         break;
+    case DisplayingMedia:
+        break;
     }
 }
 
@@ -149,8 +184,15 @@ void DisplayWidget::mousePressEvent(QMouseEvent *event)
 
 void DisplayWidget::keyPressEvent(QKeyEvent *event)
 {
-    if (event->key() == Qt::Key_Escape && !widgetMode)
+    if (widgetMode)
+        goto end;
+
+    if (event->key() == Qt::Key_Escape)
         stop();
+    else if (event->key() == Qt::Key_Space && displayMode == DisplayingMedia)
+        videoWidget->pauseResume();
+
+    end:
     QWidget::keyPressEvent(event);
 }
 
