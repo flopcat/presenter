@@ -22,6 +22,10 @@ int main(int argc, char *argv[])
     QCoreApplication::setOrganizationName("PresenterDevs");
     QCoreApplication::setApplicationName("Presenter");
     QApplication a(argc, argv);
+
+    // mpv needs LC_NUMERIC set to the C locale
+    setlocale(LC_NUMERIC, "C");
+
     a.setQuitOnLastWindowClosed(false);
     MainWindow w;
     if (w.startMinimized())

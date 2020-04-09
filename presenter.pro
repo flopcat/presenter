@@ -22,19 +22,24 @@ DEFINES += QT_DEPRECATED_WARNINGS
 # You can also select to disable deprecated APIs only up to a certain version of Qt.
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
+QT_CONFIG -= no-pkg-config
+CONFIG += link_pkgconfig debug
+PKGCONFIG += mpv
 
 SOURCES += \
         main.cpp \
         mainwindow.cpp \
     timedialog.cpp \
     displaywidget.cpp \
-    common.cpp
+    common.cpp \
+    videowidget.cpp
 
 HEADERS += \
         mainwindow.h \
     timedialog.h \
     common.h \
-    displaywidget.h
+    displaywidget.h \
+    videowidget.h
 
 FORMS += \
         mainwindow.ui \
