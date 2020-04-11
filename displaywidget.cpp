@@ -67,6 +67,8 @@ void DisplayWidget::startCountdown(int msecDuration)
 
 void DisplayWidget::startCountdownPartway(int msecPosition, int msecDuration)
 {
+    videoWidget->stop();
+    videoWidget->hide();
     displayMode = DisplayingCountdown;
     QDateTime nowTime = QDateTime::currentDateTime();
     endTime = nowTime.addMSecs(msecDuration - msecPosition);
