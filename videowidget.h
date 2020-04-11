@@ -45,7 +45,10 @@ private:
     mpv_handle *mpv = nullptr;
     mpv_render_context *mpvGL = nullptr;
 
+    QString pendingFileOpen;
+
     bool earlyStopMode = false;
+    bool glInitialized = false;
     bool mpvPaused = false;
 };
 

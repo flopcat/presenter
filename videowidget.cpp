@@ -67,6 +67,7 @@ VideoWidget::~VideoWidget()
         mpvGL = nullptr;
     }
     if (mpv) {
+        mpvCommand({cmdStop});
         mpv_terminate_destroy(mpv);
         mpv = nullptr;
     } else {
@@ -86,6 +87,10 @@ void VideoWidget::setEarlyStopMode(bool earlyStop)
 
 void VideoWidget::play(QString url)
 {
+    if (!glInitialized) {
+        pendingFileOpen = url;
+        return;
+    }
     mpvCommand({cmdLoadFile, url});
     mpvSetProperty(propPause, valueNo);
 }
@@ -93,6 +98,7 @@ void VideoWidget::play(QString url)
 void VideoWidget::stop()
 {
     mpvCommand({cmdStop});
+    mpvCommand({cmdLoadFile, ""});
 }
 
 void VideoWidget::pauseResume()
@@ -114,6 +120,14 @@ void VideoWidget::initializeGL()
         throw std::runtime_error(msgRenderContextException);
     mpv_render_context_set_update_callback(mpvGL, VideoWidget::onMpvGLUpdate,
                                            reinterpret_cast<void*>(this));
+
+    glInitialized = true;
+    if (!pendingFileOpen.isEmpty()) {
+        QTimer::singleShot(100, this, [this] {
+            play(pendingFileOpen);
+            pendingFileOpen.clear();
+        });
+    }
 }
 
 void VideoWidget::paintGL()
